@@ -21,6 +21,8 @@ USE_COMPRESSION = False
 WEB_REQUEST_TIMEOUT_SECONDS = 30
 
 VERIFY_SSL = False
+if not VERIFY_SSL:
+    requests.packages.urllib3.disable_warnings()
 
 myDict = {}
 
@@ -52,19 +54,16 @@ def getData():
 
     global myDict
     myDict = {}
-    for i in range(len(tickr)):
-        myDict[tickr[i]] = {"price": price[tickr[i]],
-                            "volume": volume[tickr[i]],
-                            "open": open[tickr[i]],
-                            "close": close[tickr[i]]
+    for symbol in tickr:
+        myDict[symbol] = {"price": price[symbol],
+                            "volume": volume[symbol],
+                            "open": open[symbol],
+                            "close": close[symbol]
                             }
+    print myDict
 
 
 def write_to_relay(pointName, data):
-    data = {
-        'value': random.random(),
-        'timestamp': datetime.datetime.utcnow().isoformat() + 'Z'
-    }
     data_body = [{
       "containerid": pointName,
       "values": [{
@@ -93,6 +92,7 @@ def send_omf_message_to_relay_endpoint(message_type, message_omf_json):
             'omfversion': '1.0',
             'compression': compression
         }
+
         # Send the request, and collect the response
         response = requests.post(
             INGRESS_URL,
