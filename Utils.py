@@ -120,3 +120,68 @@ def send_omf_message_to_endpoint(message_type, message_omf_json, token, url):
         # Log any error, if it occurs
         print("An error ocurred during web request: " + str(e))
 
+def create_pi_points():
+    for symbol in c.tickr:
+        for p_type in c.point_types: 
+            point_name = symbol + "." + p_type
+            
+            type_body = [{
+                "id": "shreyType",
+                "classification": "dynamic",
+                "type": "object",
+                "properties": {
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time",
+                        "isindex": True
+                    },
+                    "value": {
+                        "type": "number"
+                    }
+                }
+            }]
+
+            container_body = [{
+            "id": point_name,
+            "typeid": "shreyType"
+            }]
+            send_pipoint_omf("type", type_body)
+            send_pipoint_omf("container", container_body)
+
+
+def send_pipoint_omf(message_type, message_omf_json):
+    try:
+        # Compress json omf payload, if specified
+        compression = 'none'
+        if c.USE_COMPRESSION:
+            msg_body = gzip.compress(bytes(json.dumps(message_omf_json), 'utf-8'))
+            compression = 'gzip'
+        else:
+            msg_body = json.dumps(message_omf_json)
+        # Assemble headers
+        msg_headers = {
+            'producertoken': c.PRODUCER_TOKEN,
+            'messagetype': message_type,
+            'action': 'create',
+            'messageformat': 'JSON',
+            'omfversion': '1.0',
+            'compression': compression
+        }
+
+        # Send the request, and collect the response
+        response = requests.post(
+            c.INGRESS_URL,
+            headers=msg_headers,
+            data=msg_body,
+            verify=c.VERIFY_SSL,
+            timeout=c.WEB_REQUEST_TIMEOUT_SECONDS
+        )
+        # Print a debug message, if desired; note: you should receive a
+        # response code 204 if the request was successful!
+        print('Response from relay from the initial "{0}" message: {1} {2}'.format(message_type, response.status_code,
+                                                                                   response.text))
+
+    except Exception as e:
+        # Log any error, if it occurs
+        print("An error ocurred during web request: " + str(e))
+
