@@ -7,45 +7,31 @@ import gzip
 import random # Used to generate sample data; comment out this line if real data is used
 import requests
 from iexfinance.stocks import Stock
+import config as c
 
-
-tickr = ['AAPL', 'TWTR', 'TSLA', 'NFLX', 'BABA', 'MSFT', 'DIS', 'GE', 'FIT', 'F']
-point_types = ['price', 'open', 'close', 'volume']  
-
-PRODUCER_TOKEN = "uid=dc75d259-28b1-4085-bcb2-c63a91464192&crt=20181018172015100&sig=lBjuU1EwJQeMisu9BIIxPFnMap5s2h0CmadoN2SYfpU="
-
-INGRESS_URL = "https://ssatpathyrelay.dev.osisoft.int:5460/ingress/messages"
-
-USE_COMPRESSION = False
-
-WEB_REQUEST_TIMEOUT_SECONDS = 30
-
-VERIFY_SSL = False
-if not VERIFY_SSL:
+if not c.VERIFY_SSL:
     requests.packages.urllib3.disable_warnings()
 
 myDict = {}
 
-def sendData():
+def send_data():
     global myDict
     # Send OMF to relay
-    getData()
-    print myDict
-    for symbol in tickr:
-        for p_type in point_types:
+    get_data()
+    for symbol in c.tickr:
+        for p_type in c.point_types:
             point_name = symbol + "." + p_type
             data = {
                 'value': myDict[symbol][p_type],
                 'timestamp': datetime.datetime.utcnow().isoformat() + 'Z'
             }
-            print point_name
             write_to_relay(point_name, data)
             print 'Sent ', point_name
         
         time.sleep(1)
         
-def getData():
-    batch = Stock(tickr)
+def get_data():
+    batch = Stock(c.tickr)
     current = batch.get_price()
     price = batch.get_price()
     volume = batch.get_volume()
@@ -54,14 +40,12 @@ def getData():
 
     global myDict
     myDict = {}
-    for symbol in tickr:
+    for symbol in c.tickr:
         myDict[symbol] = {"price": price[symbol],
                             "volume": volume[symbol],
                             "open": open[symbol],
                             "close": close[symbol]
                             }
-    print myDict
-
 
 def write_to_relay(pointName, data):
     data_body = [{
@@ -78,14 +62,14 @@ def send_omf_message_to_relay_endpoint(message_type, message_omf_json):
     try:
         # Compress json omf payload, if specified
         compression = 'none'
-        if USE_COMPRESSION:
+        if c.USE_COMPRESSION:
             msg_body = gzip.compress(bytes(json.dumps(message_omf_json), 'utf-8'))
             compression = 'gzip'
         else:
             msg_body = json.dumps(message_omf_json)
         # Assemble headers
         msg_headers = {
-            'producertoken': PRODUCER_TOKEN,
+            'producertoken': c.PRODUCER_TOKEN,
             'messagetype': message_type,
             'action': 'create',
             'messageformat': 'JSON',
@@ -95,11 +79,11 @@ def send_omf_message_to_relay_endpoint(message_type, message_omf_json):
 
         # Send the request, and collect the response
         response = requests.post(
-            INGRESS_URL,
+            c.INGRESS_URL,
             headers=msg_headers,
             data=msg_body,
-            verify=VERIFY_SSL,
-            timeout=WEB_REQUEST_TIMEOUT_SECONDS
+            verify=c.VERIFY_SSL,
+            timeout=c.WEB_REQUEST_TIMEOUT_SECONDS
         )
         # Print a debug message, if desired; note: you should receive a
         # response code 204 if the request was successful!
