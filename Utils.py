@@ -37,6 +37,8 @@ def send_data():
                 'Open': myDict[symbol]['open'],
                 'Close': myDict[symbol]['close']
             }
+            write_to_ocs(stream, data)
+            print 'Sent ', stream
         
         time.sleep(1)
         
