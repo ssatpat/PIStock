@@ -5,11 +5,7 @@ import platform
 import socket
 import gzip
 import requests
-import dataWriter as dw
-
-point = 'myFavoritePIpoint'
-points = ['...', '....']
-print 'Sending OMF data...'
+import Utils as u
 
 # myDict = {
 #     "tickr" : {
@@ -19,19 +15,9 @@ print 'Sending OMF data...'
 #         "close": close,
 #     }
 # }
+print 'Sending OMF data...'
 
 while True:
-    # Send OMF to relay
-    for symbol in tickr:
-        for point in points:
-            data = {
-                'value': random.random(),
-                'timestamp': datetime.datetime.utcnow().isoformat() + 'Z'
-            }
-            dw.write_to_relay(point, data)
-            print 'Sent ', symbol
-            time.sleep(1)
-        
-        # Send OMF to OCS
-        # ... 
+    u.sendData()
+
 
