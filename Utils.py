@@ -82,7 +82,6 @@ def write_to_ocs(pointName, data):
     }]
     send_omf_message_to_endpoint("data", data_body, c.OCS_PRODUCER_TOKEN, c.OCS_INGRESS_URL)
 
-
 def send_omf_message_to_endpoint(message_type, message_omf_json, token, url):
     try:
         # Compress json omf payload, if specified

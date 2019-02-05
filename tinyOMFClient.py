@@ -11,5 +11,3 @@ print 'Sending OMF data...'
 
 while True:
     u.send_data()
-
-
