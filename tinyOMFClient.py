@@ -7,7 +7,10 @@ import gzip
 import requests
 import Utils as u
 
-print 'Sending OMF data...'
+print 'Setting up PI points...'
+# Uncomment to create new PI points
+#u.create_pi_points()
 
+print 'Sending OMF data...'
 while True:
     u.send_data()
