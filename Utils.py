@@ -27,6 +27,16 @@ def send_data():
             }
             write_to_relay(point_name, data)
             print 'Sent ', point_name
+
+        for stream in c.OCSStreams:
+            data = {
+                'TimeStamp': datetime.datetime.utcnow().isoformat() + 'Z',
+                'Name': symbol,
+                'Price': myDict[symbol]['price'],
+                'Volume': myDict[symbol]['volume'],
+                'Open': myDict[symbol]['open'],
+                'Close': myDict[symbol]['close']
+            }
         
         time.sleep(1)
         
@@ -55,10 +65,25 @@ def write_to_relay(pointName, data):
         "value": data['value']
         }]
     }]
-    send_omf_message_to_relay_endpoint("data", data_body)
+    send_omf_message_to_endpoint("data", data_body, c.PRODUCER_TOKEN, c.INGRESS_URL)
 
 
-def send_omf_message_to_relay_endpoint(message_type, message_omf_json):
+def write_to_ocs(pointName, data):
+    data_body = [{
+      "containerid": pointName,
+      "values": [{
+        "TimeStamp": data['TimeStamp'],
+        "Name": data['Name'],
+        "Price": data['Price'],
+        "Volume": data['Volume'],
+        "Open": data['Open'],
+        "Close": data['Close']
+        }]
+    }]
+    send_omf_message_to_endpoint("data", data_body, c.OCS_PRODUCER_TOKEN, c.OCS_INGRESS_URL)
+
+
+def send_omf_message_to_endpoint(message_type, message_omf_json, token, url):
     try:
         # Compress json omf payload, if specified
         compression = 'none'
@@ -69,7 +94,7 @@ def send_omf_message_to_relay_endpoint(message_type, message_omf_json):
             msg_body = json.dumps(message_omf_json)
         # Assemble headers
         msg_headers = {
-            'producertoken': c.PRODUCER_TOKEN,
+            'producertoken': token,
             'messagetype': message_type,
             'action': 'create',
             'messageformat': 'JSON',
@@ -79,7 +104,7 @@ def send_omf_message_to_relay_endpoint(message_type, message_omf_json):
 
         # Send the request, and collect the response
         response = requests.post(
-            c.INGRESS_URL,
+            url,
             headers=msg_headers,
             data=msg_body,
             verify=c.VERIFY_SSL,
