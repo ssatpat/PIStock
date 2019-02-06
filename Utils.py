@@ -27,19 +27,19 @@ def send_data():
             }
             write_to_relay(point_name, data)
             print 'Sent ', point_name
+        time.sleep(1)
 
-        for stream in c.OCSStreams:
-            data = {
-                'TimeStamp': datetime.datetime.utcnow().isoformat() + 'Z',
-                'Name': symbol,
-                'Price': myDict[symbol]['price'],
-                'Volume': myDict[symbol]['volume'],
-                'Open': myDict[symbol]['open'],
-                'Close': myDict[symbol]['close']
-            }
-            write_to_ocs(stream, data)
-            print 'Sent ', stream
-        
+    for i in range(0, len(c.OCSStreams)):
+        ocs_data = {
+            'TimeStamp': datetime.datetime.utcnow().isoformat() + 'Z',
+            'Name': c.tickr[i],
+            'Price': myDict[c.tickr[i]]['price'],
+            'Volume': myDict[c.tickr[i]]['volume'],
+            'Open': myDict[c.tickr[i]]['open'],
+            'Close': myDict[c.tickr[i]]['close']
+        }
+        write_to_ocs(c.OCSStreams[i], ocs_data)
+        print 'Sent ', c.OCSStreams[i]
         time.sleep(1)
         
 def get_data():
